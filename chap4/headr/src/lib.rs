@@ -85,9 +85,19 @@ pub fn run(config: Config) -> MyResult<()> {
     for filename in &config.files {
         match open(&filename) {
             Err(err) => eprintln!("{}: {}", filename, err),
-            Ok(file) => {
-                for line in file.lines().take(config.lines) {
-                    println!("{}", line?);
+            Ok(mut file) => {
+                let mut line = String::new();
+                for _ in 0..config.lines {
+                    let bytes = file.read_line(&mut line)?;
+
+                    // すでにEOFに達している場合
+                    if bytes == 0 {
+                        break;
+                    }
+
+                    println!("{}", line);
+
+                    line.clear();  // 読み込んだ文字列を空文字にする
                 }
             }
         }
