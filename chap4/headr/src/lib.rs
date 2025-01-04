@@ -86,18 +86,26 @@ pub fn run(config: Config) -> MyResult<()> {
         match open(&filename) {
             Err(err) => eprintln!("{}: {}", filename, err),
             Ok(mut file) => {
-                let mut line = String::new();
-                for _ in 0..config.lines {
-                    let bytes = file.read_line(&mut line)?;
+                if let Some(num_bytes) = config.bytes {
+                    let mut handle = file.take(num_bytes as u64);
+                    let mut buffer = vec![0; num_bytes];
+                    let byte_read = handle.read(&mut buffer);
 
-                    // すでにEOFに達している場合
-                    if bytes == 0 {
-                        break;
+                    print!("{}", String::from_utf8_lossy(&buffer[..byte_read]))
+                } else {
+                    let mut line = String::new();
+                    for _ in 0..config.lines {
+                        let bytes = file.read_line(&mut line)?;
+
+                        // すでにEOFに達している場合
+                        if bytes == 0 {
+                            break;
+                        }
+
+                        println!("{}", line);
+
+                        line.clear();  // 読み込んだ文字列を空文字にする
                     }
-
-                    println!("{}", line);
-
-                    line.clear();  // 読み込んだ文字列を空文字にする
                 }
             }
         }
