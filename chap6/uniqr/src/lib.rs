@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fs::File;
 use std::io;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use clap::{App, Arg};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
@@ -21,8 +21,8 @@ pub fn get_args() -> MyResult<Config> {
         .arg(
             Arg::with_name("count")
                 .short("c")
-                .long("counts")
-                .help("Show count")
+                .long("count")
+                .help("Show counts")
                 .takes_value(false)
         )
         .arg(
@@ -53,6 +53,25 @@ pub fn run(config: Config) -> MyResult<()> {
     let mut file = open(&config.in_file)
         .map_err(|e| format!("{}: {}", config.in_file, e))?;
 
+    let mut out_file: Box<dyn Write> = match &config.out_file {
+        Some(out_name) => Box::new(File::create(out_name)?),
+        _ => Box::new(io::stdout()),
+    };
+
+    // クロージャ
+    // out_fileを借用するため、 mut が必要
+    let mut print = |count: u64, text: &str| -> MyResult<()> {
+        if count > 0 {
+            if config.count {
+                write!(out_file, "{:>4} {}", count, text)?;
+            } else {
+                write!(out_file, "{}", text)?;
+            }
+        };
+
+        Ok(())
+    };
+
     let mut prev_line = String::new();
     let mut count = 0;
 
@@ -64,9 +83,8 @@ pub fn run(config: Config) -> MyResult<()> {
         }
 
         if prev_line.trim_end() != line.trim_end() {
-            if count > 0 {
-                println!("{:>4} {}", count, line)
-            }
+            // エラーが起きる可能性があるため、 `?` で伝播させる
+            print(count, &prev_line)?;
             prev_line = line.clone();
 
             // 前の行と異なっていたら数え直し
@@ -78,9 +96,7 @@ pub fn run(config: Config) -> MyResult<()> {
     }
 
     // 最後のものを出力
-    if count > 0 {
-        println!("{:>4} {}", count, prev_line)
-    }
+    print(count, &prev_line)?;
     Ok(())
 }
 
