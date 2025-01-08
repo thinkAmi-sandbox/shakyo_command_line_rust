@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# ファイルは自分でコピーしたため、シンボリックリンクだけこのシェルスクリプトで作るようコメントアウト
+# chmod u+x ./cp-test.sh で実行権限を付与してあげること
+
+#if [[ $# -ne 1 ]]; then
+#    printf "Usage: %s DEST_DIR\n" $(basename "$0")
+#    exit 1
+#fi
+#
+#DEST=$1
+#
+#if [[ ! -d "$DEST" ]]; then
+#    echo "\"$DEST\" is not a directory"
+#    exit 1
+#fi
+#
+#echo "Copying \"tests\" to \"$DEST\""
+#cp -r tests "$DEST"
+#cd "$DEST"
+
+echo "Creating symlink"
+
+# 訳注の内容を反映済
+(cd tests/inputs/d && rm -f b.csv && ln -s ../a/b/b.csv .)
+
+echo "Done."
