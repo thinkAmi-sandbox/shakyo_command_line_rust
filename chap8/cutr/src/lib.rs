@@ -217,12 +217,20 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
     // selected.iter().collect()
 
     // version3: 集約するための変数を持たず、mapとflattenを使う
+    // let chars: Vec<_> = line.chars().collect();
+    // char_pos
+    //     .iter()
+    //     .cloned()
+    //     .map(|range| range.filter_map(|i| chars.get(i)))
+    //     .flatten()
+    //     .collect()
+
+    // version4: 集約する変数を持たず、mapとflattenの代わりに flat_map を使う
     let chars: Vec<_> = line.chars().collect();
     char_pos
         .iter()
         .cloned()
-        .map(|range| range.filter_map(|i| chars.get(i)))
-        .flatten()
+        .flat_map(|range| range.filter_map(|i| chars.get(i)))
         .collect()
 }
 
