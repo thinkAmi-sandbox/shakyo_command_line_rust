@@ -197,7 +197,7 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
     // version1: 命令型のアプローチ
     // let chars: Vec<_> = line.chars().collect();
     // let mut selected: Vec<char> = vec![];
-    // 
+    //
     // for range in char_pos.iter().cloned() {
     //     for i in range {
     //         if let Some(val) = chars.get(i) {
@@ -207,14 +207,23 @@ fn extract_chars(line: &str, char_pos: &[Range<usize>]) -> String {
     // }
 
     // version2: flat_matを使う
+    // let chars: Vec<_> = line.chars().collect();
+    // let mut selected: Vec<char> = vec![];
+    //
+    // for range in char_pos.iter().cloned() {
+    //     selected.extend(range.filter_map(|i| chars.get(i)));
+    // }
+
+    // selected.iter().collect()
+
+    // version3: 集約するための変数を持たず、mapとflattenを使う
     let chars: Vec<_> = line.chars().collect();
-    let mut selected: Vec<char> = vec![];
-
-    for range in char_pos.iter().cloned() {
-        selected.extend(range.filter_map(|i| chars.get(i)));
-    }
-
-    selected.iter().collect()
+    char_pos
+        .iter()
+        .cloned()
+        .map(|range| range.filter_map(|i| chars.get(i)))
+        .flatten()
+        .collect()
 }
 
 fn extract_bytes(line: &str, byte_pos: &[Range<usize>]) -> String {
