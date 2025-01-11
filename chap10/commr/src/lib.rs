@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 use clap::{App, Arg};
+use crate::Column::{Col1, Col2, Col3};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 
@@ -16,6 +17,12 @@ pub struct Config {
     show_col3: bool,
     insensitive: bool,
     delimiter: String,
+}
+
+enum Column<'a> {
+    Col1(&'a str),
+    Col2(&'a str),
+    Col3(&'a str),
 }
 
 pub fn get_args() -> MyResult<Config> {
@@ -82,6 +89,39 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
+    let print = |col: Column| {
+        let mut columns = vec![];
+
+        match col {
+            Col1(val) => {
+                if config.show_col1 {
+                    columns.push(val);
+                }
+            }
+            Col2(val) => {
+                if config.show_col2 {
+                    if config.show_col1 {
+                        columns.push("");
+                    }
+                    columns.push(val);
+                }
+            }
+            Col3(val) => {
+                if config.show_col3 {
+                    columns.push("");
+                }
+                if config.show_col2 {
+                    columns.push("");
+                }
+                columns.push(val);
+            }
+        }
+
+        if !columns.is_empty() {
+            println!("{}", columns.join(&config.delimiter));
+        }
+    };
+
     let file1 = &config.file1;
     let file2 = &config.file2;
 
@@ -129,25 +169,25 @@ pub fn run(config: Config) -> MyResult<()> {
         match (&line1, &line2) {
             (Some(val1), Some(val2)) => match val1.cmp(val2) {
                 Ordering::Equal => {
-                    println!("{}", val1);
+                    print(Col3(val1));
                     line1 = lines1.next();
                     line2 = lines2.next();
                 }
                 Ordering::Less => {
-                    println!("{}", val1);
+                    print(Col1(val1));
                     line1 = lines1.next();
                 }
                 Ordering::Greater => {
-                    println!("{}", val2);
+                    print(Col2(val2));
                     line2 = lines2.next();
                 }
             },
             (Some(val1), None) => {
-                println!("{}", val1);
+                print(Col1(val1));
                 line1 = lines1.next();
             }
             (None, Some(val2)) => {
-                println!("{}", val2);
+                print(Col2(val2));
                 line2 = lines2.next();
             }
             _ => ()
