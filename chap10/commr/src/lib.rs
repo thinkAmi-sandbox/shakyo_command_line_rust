@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::error::Error;
 use std::fs::File;
 use std::io;
@@ -88,9 +89,70 @@ pub fn run(config: Config) -> MyResult<()> {
         return Err(From::from("Both input files cannot be STDIN (\"-\")"))
     }
 
-    let _file1 = open(file1)?;
-    let _file2 = open(file2)?;
-    println!("Opened {} and {}", file1, file2);
+    let case = |line: String| {
+        if config.insensitive {
+            line.to_lowercase()
+        } else {
+            line
+        }
+    };
+
+    let mut lines1 = open(file1)?.lines().filter_map(Result::ok).map(case);
+    let mut lines2 = open(file2)?.lines().filter_map(Result::ok).map(case);
+
+    let mut line1 = lines1.next();
+    let mut line2 = lines2.next();
+
+    // line1とline2の最初の値を確認
+    // cargo run -- tests/inputs/file1.txt tests/inputs/empty.txt
+    // println!("line1 = {:?}", line1); // => SOme("a")
+    // println!("line2 = {:?}", line2); // => None
+
+    // 交互に読み込む処理
+    // while line1.is_some() || line2.is_some() {
+    //     match (&line1, &line2) {
+    //         (Some(_), Some(_)) => {
+    //             line1 = lines1.next();
+    //             line2 = lines2.next();
+    //         },
+    //         (Some(_), None) => {
+    //             line1 = lines1.next();
+    //         }
+    //         (None, Some(_)) => {
+    //             line2 = lines2.next();
+    //         }
+    //         _ => {}
+    //     }
+    // }
+
+    while line1.is_some() || line2.is_some() {
+        match (&line1, &line2) {
+            (Some(val1), Some(val2)) => match val1.cmp(val2) {
+                Ordering::Equal => {
+                    println!("{}", val1);
+                    line1 = lines1.next();
+                    line2 = lines2.next();
+                }
+                Ordering::Less => {
+                    println!("{}", val1);
+                    line1 = lines1.next();
+                }
+                Ordering::Greater => {
+                    println!("{}", val2);
+                    line2 = lines2.next();
+                }
+            },
+            (Some(val1), None) => {
+                println!("{}", val1);
+                line1 = lines1.next();
+            }
+            (None, Some(val2)) => {
+                println!("{}", val2);
+                line2 = lines2.next();
+            }
+            _ => ()
+        }
+    }
 
     Ok(())
 }
