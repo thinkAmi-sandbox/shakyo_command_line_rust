@@ -1,0 +1,5 @@
+.idea
+**/target/**
+
+# さわれないファイルはコミットしない
+cant-touch-this
