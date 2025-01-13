@@ -19,4 +19,4 @@ https://www.oreilly.co.jp/books/9784814400584/
 
 ## 関係するブログ
 
-
+- [書籍「Rustの練習帳」を写経しながら読んでみた - メモ的な思考的な](https://thinkami.hatenablog.com/entry/2025/01/13/222928)
